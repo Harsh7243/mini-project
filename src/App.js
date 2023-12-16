@@ -1,0 +1,99 @@
+import React, { useState, useEffect } from 'react';
+import { Routes, Route, Link, useParams } from 'react-router-dom';
+import axios from 'axios';
+import './App.css';
+
+function Home({ products }) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [visibleProducts] = useState(6);
+
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const filteredProducts = products.filter((p) =>
+    p.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div>
+      <h1>Amaze On</h1>
+      <div className='rbord'>
+        <div className='search-bar'>
+          <input
+            type='text'
+            placeholder='Search product ..'
+            value={searchTerm}
+            onChange={handleSearch}
+          />
+        </div>
+        <div className='grid product-grid'>
+          {filteredProducts.slice(0, visibleProducts).map((p) => (
+            <Link to={`/product/${p.id}`} key={p.id} className='product-card'>
+              <div>
+                <img src={p.image} alt={p.title} className='product-image-home' />
+                <div className='product-details-home'>
+                  <p className='product-title-home'>{p.title}</p>
+                  <p className='product-price-home'>${p.price}</p>
+                </div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProductDetails() {
+  const { productId } = useParams();
+  const [product, setProduct] = useState(null);
+
+  useEffect(() => {
+  axios.get(`https://fakestoreapi.com/products/${productId}`)
+  .then(response => setProduct(response.data))
+  .catch(error => console.error('Error fetching product details: ', error));
+  }, [productId]);
+
+  return (
+  <div>
+    <h1>Product</h1>
+    <div className='rbord-pro'>
+      <div className='product-page'>
+        {product && (
+          <>
+            <img src={product.image} alt={product.title} className='product-image' />
+            <div className='product-details'>
+              <h2 className='product-title'>{product.title}</h2>
+              <p className='product-price'>${product.price}</p>
+              <p className='product-description'>{product.description}</p>
+              <p className='product-rating'>Rating: {product.rating.rate} <br/> ({product.rating.count} reviews)</p>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  </div>
+  );
+}
+
+function App() {
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    axios.get('https://fakestoreapi.com/products')
+    .then(response => setProducts(response.data))
+    .catch(error => console.error('Error fetching data: ', error));
+  }, []);
+
+  return (
+    <div>
+      <Routes>
+        <Route path="/" element={<Home products={products} />} />
+        <Route path="/product/:productId" element={<ProductDetails />} />
+      </Routes>
+    </div>
+  );
+}
+
+export default App;
